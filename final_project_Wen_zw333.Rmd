@@ -1,0 +1,105 @@
+---
+title: "final_project_Wen_zw333"
+author: "Zhibin Wen"
+date: "5/4/2020"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(readr)
+## data
+tuition <- read_csv("tuition.csv")
+income <- read_csv("income.csv")
+```
+
+```{r}
+## which state's tuition is more expensive
+library(stringr)
+library(rvest)
+library(ggplot2)
+library(haven)
+library(tidyverse)
+library(dplyr)
+library(pool)
+library(choroplethr)
+library(choroplethrMaps)
+library(tidycensus)
+library(sf)
+library(leaflet)
+library(lubridate)
+library(gridExtra)
+## bar chart(in state)
+exp.in <- tuition %>% group_by(state) %>% summarise(avgtuition = mean(in_state_total)) %>% .[1:50,]
+exp.in$state <- exp.in$state %>% str_replace_all("Alabama","AL") %>% str_replace_all("Alaska","AK") %>% str_replace_all("Arizona","AZ") %>% str_replace_all("Arkansas","AR") %>% str_replace_all("California","CA") %>% str_replace_all("Colorado","CO") %>% str_replace_all("Connecticut","CT") %>% str_replace_all("Delaware","DE") %>% str_replace_all("Florida","FL") %>% str_replace_all("Georgia","GA") %>% str_replace_all("Hawaii","HI") %>% str_replace_all("Idaho","ID") %>% str_replace_all("Illinois","IL") %>% str_replace_all("Indiana","IN") %>% str_replace_all("Iowa","IA") %>% str_replace_all("Kansas","KS") %>% str_replace_all("Kentucky","KY") %>% str_replace_all("Louisiana","LA") %>% str_replace_all("Maine","ME") %>% str_replace_all("Maryland","MD") %>% str_replace_all("Massachusetts","MA") %>% str_replace_all("Michigan","MI") %>% str_replace_all("Minnesota","MN") %>% str_replace_all("Mississippi","MS") %>% str_replace_all("Missouri","MO") %>% str_replace_all("Montana","MT") %>% str_replace_all("Nebraska","NE") %>% str_replace_all("Nevada","NV") %>% str_replace_all("New Hampshire","NH") %>% str_replace_all("New Jersey","NJ") %>% str_replace_all("New Mexico","NM") %>% str_replace_all("New York","NY") %>% str_replace_all("North Carolina","NC") %>% str_replace_all("North Dakota","ND") %>% str_replace_all("Ohio","OH") %>% str_replace_all("Oklahoma","OK") %>% str_replace_all("Oregon","OR") %>% str_replace_all("Pennsylvania","PA") %>% str_replace_all("Rhode Island","RI") %>% str_replace_all("South Carolina","SC") %>% str_replace_all("South Dakota","SD") %>% str_replace_all("Tennessee","TN") %>% str_replace_all("Texas","TX") %>% str_replace_all("Utah","UT") %>% str_replace_all("Vermont","VT") %>% str_replace_all("Virginia","VA") %>% str_replace_all("Washington","WA") %>% str_replace_all("West Virginia","WV") %>% str_replace_all("Wisconsin","WI") %>% str_replace_all("Wyoming","WY") 
+
+ggplot(exp.in) + geom_bar(aes(x = state, y = avgtuition), stat = "identity") + ggtitle("Average tuition for in-state residents")
+##barchart(out of state)
+exp.out <- tuition %>% group_by(state) %>% summarise(avgtuition = mean(out_of_state_total)) %>% .[1:50,]
+exp.out$state <- exp.out$state %>% str_replace_all("Alabama","AL") %>% str_replace_all("Alaska","AK") %>% str_replace_all("Arizona","AZ") %>% str_replace_all("Arkansas","AR") %>% str_replace_all("California","CA") %>% str_replace_all("Colorado","CO") %>% str_replace_all("Connecticut","CT") %>% str_replace_all("Delaware","DE") %>% str_replace_all("Florida","FL") %>% str_replace_all("Georgia","GA") %>% str_replace_all("Hawaii","HI") %>% str_replace_all("Idaho","ID") %>% str_replace_all("Illinois","IL") %>% str_replace_all("Indiana","IN") %>% str_replace_all("Iowa","IA") %>% str_replace_all("Kansas","KS") %>% str_replace_all("Kentucky","KY") %>% str_replace_all("Louisiana","LA") %>% str_replace_all("Maine","ME") %>% str_replace_all("Maryland","MD") %>% str_replace_all("Massachusetts","MA") %>% str_replace_all("Michigan","MI") %>% str_replace_all("Minnesota","MN") %>% str_replace_all("Mississippi","MS") %>% str_replace_all("Missouri","MO") %>% str_replace_all("Montana","MT") %>% str_replace_all("Nebraska","NE") %>% str_replace_all("Nevada","NV") %>% str_replace_all("New Hampshire","NH") %>% str_replace_all("New Jersey","NJ") %>% str_replace_all("New Mexico","NM") %>% str_replace_all("New York","NY") %>% str_replace_all("North Carolina","NC") %>% str_replace_all("North Dakota","ND") %>% str_replace_all("Ohio","OH") %>% str_replace_all("Oklahoma","OK") %>% str_replace_all("Oregon","OR") %>% str_replace_all("Pennsylvania","PA") %>% str_replace_all("Rhode Island","RI") %>% str_replace_all("South Carolina","SC") %>% str_replace_all("South Dakota","SD") %>% str_replace_all("Tennessee","TN") %>% str_replace_all("Texas","TX") %>% str_replace_all("Utah","UT") %>% str_replace_all("Vermont","VT") %>% str_replace_all("Virginia","VA") %>% str_replace_all("Washington","WA") %>% str_replace_all("West Virginia","WV") %>% str_replace_all("Wisconsin","WI") %>% str_replace_all("Wyoming","WY") 
+
+ggplot(exp.out) + geom_bar(aes(x = state, y = avgtuition), stat = "identity") + ggtitle("Average tuition for out-of-state residents")
+
+## chorography for in and out of the state
+exp.in.cho <- tuition %>% group_by(state) %>% summarise(avgtuition = mean(in_state_total)) %>% .[1:50,]
+exp.in.cho$state <- exp.in.cho$state %>% tolower()
+exp.out.cho <- tuition %>% group_by(state) %>% summarise(avgtuition = mean(out_of_state_total)) %>% .[1:50,]
+exp.out.cho$state <- exp.out.cho$state %>% tolower()
+grid.arrange(state_choropleth(exp.in.cho %>% rename(region = state) %>% rename(value = avgtuition), title = "Average tuition for in-state residents"), state_choropleth(exp.out.cho %>% rename(region = state) %>% rename(value = avgtuition), title = "Average tuition for out-of-state residents"), ncol = 1, nrow = 2)
+
+```
+##income
+```{r}
+## bar chart
+inc <- income %>% group_by(state_name) %>% summarise(avgincome = mean(mid_career_pay))
+inc$state_name <- inc$state_name %>% str_replace_all("Alabama","AL") %>% str_replace_all("Alaska","AK") %>% str_replace_all("Arizona","AZ") %>% str_replace_all("Arkansas","AR") %>% str_replace_all("California","CA") %>% str_replace_all("Colorado","CO") %>% str_replace_all("Connecticut","CT") %>% str_replace_all("Delaware","DE") %>% str_replace_all("Florida","FL") %>% str_replace_all("Georgia","GA") %>% str_replace_all("Hawaii","HI") %>% str_replace_all("Idaho","ID") %>% str_replace_all("Illinois","IL") %>% str_replace_all("Indiana","IN") %>% str_replace_all("Iowa","IA") %>% str_replace_all("Kansas","KS") %>% str_replace_all("Kentucky","KY") %>% str_replace_all("Louisiana","LA") %>% str_replace_all("Maine","ME") %>% str_replace_all("Maryland","MD") %>% str_replace_all("Massachusetts","MA") %>% str_replace_all("Michigan","MI") %>% str_replace_all("Minnesota","MN") %>% str_replace_all("Mississippi","MS") %>% str_replace_all("Missouri","MO") %>% str_replace_all("Montana","MT") %>% str_replace_all("Nebraska","NE") %>% str_replace_all("Nevada","NV") %>% str_replace_all("New[-]*Hampshire","NH") %>% str_replace_all("New[-]*Jersey","NJ") %>% str_replace_all("New[-]*Mexico","NM") %>% str_replace_all("New[-]*York","NY") %>% str_replace_all("North[-]*Carolina","NC") %>% str_replace_all("North[-]*Dakota","ND") %>% str_replace_all("Ohio","OH") %>% str_replace_all("Oklahoma","OK") %>% str_replace_all("Oregon","OR") %>% str_replace_all("Pennsylvania","PA") %>% str_replace_all("Rhode[-]*Island","RI") %>% str_replace_all("South[-]*Carolina","SC") %>% str_replace_all("South[-]*Dakota","SD") %>% str_replace_all("Tennessee","TN") %>% str_replace_all("Texas","TX") %>% str_replace_all("Utah","UT") %>% str_replace_all("Vermont","VT") %>% str_replace_all("Virginia","VA") %>% str_replace_all("Washington","WA") %>% str_replace_all("West-VA","WV") %>% str_replace_all("Wisconsin","WI") %>% str_replace_all("Wyoming","WY") 
+
+ggplot(inc) + geom_bar(aes(x = state_name, y = avgincome), stat = "identity") + ggtitle("Average income for students in every state")
+
+## chorography
+inc.cho <- income %>% group_by(state_name) %>% summarise(avgincome = mean(mid_career_pay))
+inc.cho$state_name <- inc.cho$state_name %>% str_replace_all("New[-]*Hampshire","new hampshire") %>% str_replace_all("New[-]*Jersey","new jersey") %>% str_replace_all("New[-]*Mexico","new mexico") %>% str_replace_all("New[-]*York","new york") %>% str_replace_all("North[-]*Carolina","north carolina") %>% str_replace_all("North[-]*Dakota","north dakota") %>% str_replace_all("Rhode[-]*Island","rhode island") %>% str_replace_all("South[-]*Carolina","south carolina") %>% str_replace_all("South[-]*Dakota","south dakota") %>% str_replace_all("West[-]Virginia","west virginia")
+
+inc.cho$state_name <- inc.cho$state_name %>% tolower()
+state_choropleth(inc.cho %>% rename(region = state_name) %>% rename(value = avgincome), title = "Average income for students in every state")
+```
+## regression of income and tuition
+```{r}
+##all states
+exp <- inner_join(exp.in, exp.out, by = c("state" = "state")) %>% mutate(tuition = 1/2*(avgtuition.x + avgtuition.y)) %>% select(state, tuition)
+reg <- inner_join(exp, inc, by = c("state" = "state_name"))
+model <- lm(avgincome ~ tuition, data = reg)
+coef(model)
+ggplot(reg, aes(x = tuition, y = avgincome)) + geom_point() + geom_abline(intercept = coef(model)[1], slope = coef(model)[2]) + ggtitle("The linear regression using all states data")
+
+```
+```{r}
+## New Jersey as example
+njuni.exp <- tuition %>% filter(state == "New Jersey") %>% mutate(fee = 1/2*(in_state_total + out_of_state_total)) %>% select(name, fee)
+njuni.inc <- income %>% filter(state_name == "New-Jersey") %>% select(name, mid_career_pay)
+nj.reg <- inner_join(njuni.exp, njuni.inc, by = c("name" = "name"))
+nj.model <- lm(mid_career_pay ~ fee, data = nj.reg)
+coef(nj.model)
+ggplot(nj.reg, aes(x = fee, y = mid_career_pay)) + geom_point() + geom_abline(intercept = coef(nj.model)[1], slope = coef(nj.model)[2]) + ggtitle("The linear regression using New Jersey data")
+```
+##compare income between different major category 
+```{r}
+library(openxlsx)
+data <- read_csv("major.csv")
+## categories
+inc.cat <- data %>% select(major_category, median) %>% group_by(major_category) %>% summarise(avgearnings = mean(median)) %>% arrange(desc(avgearnings)) %>% head(10)
+inc.cat
+## majors
+inc.maj <- data %>% select(major, median) %>% arrange(desc(median)) %>% head(10)
+inc.maj
+```
+## gender difference in choosing majors
+```{r}
+##Top 5 of major categories that have the highest percentage of female students
+gen <- data %>% select(major_category, major, share_women)
+gen.cat <- gen %>% group_by(major_category) %>% summarise(womenrate = mean(share_women)) %>% arrange(desc(womenrate)) %>% head(5)
+ggplot(gen.cat) + geom_bar(aes(x = major_category, y = womenrate), stat = "identity") + ggtitle("Top 5 of major categories that have the highest percentage of female students")
+## top 5 majors
+gen.maj <- gen %>% group_by(major) %>% arrange(desc(share_women)) %>% head(5)
+gen.maj
+```
+
